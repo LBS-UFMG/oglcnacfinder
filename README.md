@@ -43,6 +43,19 @@ records = read_fasta('proteins.fasta')
 sites = predictor.score([r[0] for r in records], [r[1] for r in records])
 ```
 
+## Website worker
+
+`oglcnacfinder-worker` scores the jobs of the O-GlcNAcFinder website. It runs on the computer with
+the GPU and asks the website for work every 20 seconds, so that computer only makes outgoing HTTPS
+requests. It authenticates with a shared token: the same value goes in the website's `.env`
+(`worker.token = '...'`) and in the environment variable `OGLCNACFINDER_TOKEN` of the worker.
+
+```bash
+oglcnacfinder-worker https://bioinfo.dcc.ufmg.br/oglcnacfinder -m final_model.pt --device cuda:0
+```
+
+`--once` scores at most one job and exits (for testing).
+
 ## Method
 
 ESM-2 150M last-layer embeddings are computed on windows of at most 1,022 residues; longer proteins

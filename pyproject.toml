@@ -17,6 +17,7 @@ test = ["pytest"]
 
 [project.scripts]
 oglcnacfinder = "oglcnacfinder.cli:main"
+oglcnacfinder-worker = "oglcnacfinder.worker:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
