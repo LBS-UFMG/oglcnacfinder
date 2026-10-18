@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oglcnacfinder"
+version = "0.26.1017"
+description = "Prediction of O-GlcNAc sites on serine and threonine residues from ESM-2 embeddings"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "Adenilson Arcanjo"}]
+requires-python = ">=3.9"
+dependencies = ["numpy", "pandas", "torch>=1.13", "transformers", "tqdm"]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[project.scripts]
+oglcnacfinder = "oglcnacfinder.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
