@@ -33,3 +33,20 @@ def test_result_format():
 def test_failure_is_reported():
     payload = score_job(StandIn(), {'id': 'j2', 'records': [{'id': 'bad', 'sequence': 'MSJT'}]})
     assert payload['status'] == 'failed' and "'J'" in payload['error']
+
+
+def test_atlas_classes():
+    pytest = __import__('pytest')
+    pytest.importorskip('Bio')
+    seq = 'MSTASTXUS'
+    job = {'id': 'j3', 'records': [
+        {'id': 'a', 'sequence': seq, 'atlas': [{'protein_id': 'P1', 'organism': 'Homo sapiens', 'sequence': seq,
+                                                'positive': [2], 'ambiguous': [3, 5]}]},
+        {'id': 'b', 'sequence': seq, 'atlas': []},
+        {'id': 'c', 'sequence': seq}]}
+    proteins = score_job(StandIn(), job)['result']['proteins']
+    assert {s['position']: s['atlas'] for s in proteins[0]['sites']} == {2: 'positive', 3: 'ambiguous', 5: 'ambiguous',
+                                                                         6: 'none', 9: 'none'}
+    assert proteins[0]['atlas_matches'][0]['protein_id'] == 'P1'
+    assert {s['atlas'] for s in proteins[1]['sites']} == {'none'} and proteins[1]['atlas_matches'] == []
+    assert {s['atlas'] for s in proteins[2]['sites']} == {None} and 'atlas_matches' not in proteins[2]

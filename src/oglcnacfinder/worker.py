@@ -2,8 +2,8 @@
 
 The worker runs on the computer with the GPU and asks the website for work, so that computer only
 makes outgoing HTTPS requests:
-  GET  <url>/worker/next          the oldest waiting job, {"id", "records": [{"id", "sequence"}]},
-                                  or 204 when there is none;
+  GET  <url>/worker/next          the oldest waiting job, {"id", "records": [{"id", "sequence",
+                                  "atlas" (optional: matching Atlas 5.0 entries)}]}, or 204;
   POST <url>/worker/result/<id>   {"status": "done", "result": {...}} or {"status": "failed", "error"}.
 Both carry the website's shared token (worker.token in its .env) in the X-Worker-Token header; the
 worker reads it from the environment variable OGLCNACFINDER_TOKEN.
@@ -18,6 +18,7 @@ import urllib.error
 import urllib.request
 
 from . import __version__
+from .atlas import transfer_sites
 from .scoring import ESM_PATH, MAX_TOKENS, Predictor, check_sequence
 
 TOKEN_VARIABLE = 'OGLCNACFINDER_TOKEN'
@@ -27,20 +28,27 @@ log = logging.getLogger('oglcnacfinder.worker')
 def build_result(job_id, records, sites, cutoff):
     """Result in the website format: one entry per submitted record, with every S/T, its
     probability, its rank within the protein (1 = highest; ties share the lowest rank) and its call.
-    The website adds the Atlas 5.0 classes, the structure and the source details.
+    When the website sent the matching Atlas 5.0 entries of a record ('atlas'), each S/T gets its
+    Atlas class ('positive', 'ambiguous' or 'none') and the protein a summary of the matches;
+    otherwise the class is None. The website adds the structure and the source details.
     sites.protein_id holds the index of the record (as a string)."""
     groups = {pid: g for pid, g in sites.groupby('protein_id', sort=False)}
     proteins = []
     for k, record in enumerate(records):
+        classes, matches = (transfer_sites(record['sequence'], record['atlas']) if 'atlas' in record
+                            else (None, None))
         g = groups.get(str(k))
         site_list = []
         if g is not None:
             rank = g['probability'].rank(ascending=False, method='min')
             site_list = [{'position': int(p), 'residue': r, 'probability': round(float(pr), 6), 'rank': int(n),
-                          'called': bool(c), 'atlas': None}
+                          'called': bool(c), 'atlas': None if classes is None else classes.get(int(p), 'none')}
                          for p, r, pr, n, c in zip(g['position'], g['residue'], g['probability'], rank, g['called'])]
-        proteins.append({'id': record['id'], 'source': 'sequence', 'length': len(record['sequence']),
-                         'st_count': len(site_list), 'structure': None, 'sites': site_list})
+        protein = {'id': record['id'], 'source': 'sequence', 'length': len(record['sequence']),
+                   'st_count': len(site_list), 'structure': None, 'sites': site_list}
+        if matches is not None:
+            protein['atlas_matches'] = matches
+        proteins.append(protein)
     return {'job_id': job_id,
             'versions': {'model': f'O-GlcNAcFinder {__version__}', 'atlas': None, 'uniprot_release': None},
             'cutoff_default': cutoff, 'proteins': proteins}
