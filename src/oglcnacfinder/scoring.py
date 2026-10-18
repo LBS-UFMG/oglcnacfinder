@@ -20,6 +20,27 @@ MAX_RES, OVERLAP, K = 1022, 256, 20
 ESM_PATH, MAX_TOKENS = 'facebook/esm2_t30_150M_UR50D', 65536
 COLUMNS = ['protein_id', 'position', 'residue', 'logit', 'probability', 'called']
 
+# Letters that are single residue tokens of the ESM-2 vocabulary: the 20 standard amino acids, X
+# (unknown), B (D or N), Z (E or Q), U (selenocysteine) and O (pyrrolysine). They are passed to ESM-2
+# unchanged, as in the paper. Any other character is rejected: the tokenizer maps it to <unk> and
+# merges a run of such characters into one token ('JJ' -> one <unk>), which would shift the
+# embeddings against the residue positions.
+RESIDUES = frozenset('ACDEFGHIKLMNPQRSTVWYXBZUO')
+
+
+def check_sequence(pid, seq):
+    """Raise ValueError naming the characters of seq that are not accepted residue letters."""
+    if not seq:
+        raise ValueError(f'{pid}: empty sequence')
+    invalid = {}
+    for p, aa in enumerate(seq, start=1):
+        if aa not in RESIDUES:
+            invalid.setdefault(aa, p)
+    if invalid:
+        found = ', '.join(f'{aa!r} (first at position {p})' for aa, p in invalid.items())
+        raise ValueError(f'{pid}: characters that are not accepted residue letters: {found}. Accepted: the 20 '
+                         'standard amino acids plus X, B, Z, U and O, in upper case.')
+
 
 def window_starts(length):
     """0-based start of each window: the fewest windows of MAX_RES residues overlapping by
@@ -87,8 +108,8 @@ def score_proteins(ids, seqs, embed, classify, platt_a, platt_b, cutoff, progres
     ids, seqs = list(ids), list(seqs)
     if len(set(ids)) != len(ids):
         raise ValueError('protein identifiers must be unique')
-    if any(len(seq) == 0 for seq in seqs):
-        raise ValueError('empty sequence')
+    for pid, seq in zip(ids, seqs):
+        check_sequence(pid, seq)
     windows, sites = assign_windows(ids, seqs)
     if sites.empty:
         return pd.DataFrame(columns=COLUMNS)

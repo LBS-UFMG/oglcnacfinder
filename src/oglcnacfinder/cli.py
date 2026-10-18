@@ -6,7 +6,7 @@ from tqdm.auto import tqdm
 
 from . import __version__
 from .fasta import read_fasta
-from .scoring import ESM_PATH, MAX_TOKENS, Predictor
+from .scoring import ESM_PATH, MAX_TOKENS, Predictor, check_sequence
 
 
 def main(argv=None):
@@ -31,6 +31,11 @@ def main(argv=None):
         parser.error(f'no FASTA records in {args.fasta}')
     if len({r[0] for r in records}) != len(records):
         parser.error('FASTA identifiers (first word of each header) must be unique')
+    try:
+        for pid, seq in records:
+            check_sequence(pid, seq)
+    except ValueError as e:
+        parser.error(str(e))
     predictor = Predictor(args.model, device=args.device, esm_path=args.esm, max_tokens=args.max_tokens,
                           progress=not args.quiet)
     print(f'O-GlcNAcFinder {__version__}: {len(records):,} proteins; device {predictor.device}; '

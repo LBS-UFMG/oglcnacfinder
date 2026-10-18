@@ -1,12 +1,14 @@
 """Checks of the scoring code against direct (slow) computations, with a stand-in embedding model.
 
 The comparison with the paper's predictions, which needs ESM-2 and final_model.pt, is task A2."""
+import re
+
 import numpy as np
 import pytest
 
-from oglcnacfinder.fasta import read_fasta
-from oglcnacfinder.scoring import (K, MAX_RES, OVERLAP, assign_windows, batches_by_tokens, score_proteins,
-                                   window_starts)
+from oglcnacfinder.fasta import clean_sequence, read_fasta
+from oglcnacfinder.scoring import (K, MAX_RES, OVERLAP, assign_windows, batches_by_tokens, check_sequence,
+                                   score_proteins, window_starts)
 
 HIDDEN = 8
 rng = np.random.default_rng(0)
@@ -96,5 +98,26 @@ def test_batches_respect_token_limit():
 
 def test_read_fasta(tmp_path):
     f = tmp_path / 'x.fasta'
-    f.write_text('>sp|O75112|LDB3_HUMAN LIM domain > binding 3\nmsta\nST A\n\n>b\nMK\n')
+    f.write_text('>sp|O75112|LDB3_HUMAN LIM domain > binding 3\nmsta\nST A*\n\n>b\nMK\n')
     assert read_fasta(f) == [('sp|O75112|LDB3_HUMAN', 'MSTASTA'), ('b', 'MK')]
+
+
+@pytest.mark.parametrize('raw, cleaned', [('ms ta\n', 'MSTA'), ('MSTA*', 'MSTA'), ('MS*TA', 'MS*TA'), ('MSTA**', 'MSTA*')])
+def test_clean_sequence(raw, cleaned):
+    assert clean_sequence(raw) == cleaned
+
+
+@pytest.mark.parametrize('seq', ['MSTA', 'MUSXT', 'MBZOS', 'XXXXSXXXX'])
+def test_accepted_letters(seq):
+    check_sequence('p', seq)
+    got = score_proteins(['p'], [seq], stand_in_embed, stand_in_classify, 1, 0, 0.5, progress=False)
+    assert list(got['position']) == [i + 1 for i, aa in enumerate(seq) if aa in 'ST']
+
+
+@pytest.mark.parametrize('seq, bad', [('MJS', "'J'"), ('MJJS', "'J'"), ('MS*T', "'*'"), ('MsT', "'s'"),
+                                      ('MS.T', "'.'"), ('MS-T', "'-'"), ('M1S', "'1'"), ('MS T', "' '")])
+def test_rejected_characters(seq, bad):
+    with pytest.raises(ValueError, match=re.escape(bad)):
+        check_sequence('p', seq)
+    with pytest.raises(ValueError):
+        score_proteins(['p'], [seq], stand_in_embed, stand_in_classify, 1, 0, 0.5, progress=False)
