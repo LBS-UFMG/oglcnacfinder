@@ -33,7 +33,7 @@ def position_map(a, b):
     for (s1, e1), (s2, _) in zip(*aln.aligned):
         for k in range(e1 - s1):
             if a[s1 + k] == b[s2 + k]:
-                mapping[s1 + k + 1] = s2 + k + 1
+                mapping[int(s1 + k + 1)] = int(s2 + k + 1)
     return mapping
 
 
