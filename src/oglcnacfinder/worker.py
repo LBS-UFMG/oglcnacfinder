@@ -29,20 +29,22 @@ def build_result(job_id, records, sites, cutoff):
     """Result in the website format: one entry per submitted record, with every S/T, its
     probability, its rank within the protein (1 = highest; ties share the lowest rank) and its call.
     When the website sent the matching Atlas 5.0 entries of a record ('atlas'), each S/T gets its
-    Atlas class ('positive', 'ambiguous' or 'none') and the protein a summary of the matches;
-    otherwise the class is None. The website adds the structure and the source details.
+    Atlas class ('positive', 'ambiguous' or 'none'), 'atlas_aligned' (True when the class comes
+    only from entries with a different sequence, placed by alignment), and the protein a summary of
+    the matches; otherwise the class is None. The website adds the structure and the source details.
     sites.protein_id holds the index of the record (as a string)."""
     groups = {pid: g for pid, g in sites.groupby('protein_id', sort=False)}
     proteins = []
     for k, record in enumerate(records):
-        classes, matches = (transfer_sites(record['sequence'], record['atlas']) if 'atlas' in record
-                            else (None, None))
+        classes, aligned, matches = (transfer_sites(record['sequence'], record['atlas']) if 'atlas' in record
+                                     else (None, set(), None))
         g = groups.get(str(k))
         site_list = []
         if g is not None:
             rank = g['probability'].rank(ascending=False, method='min')
             site_list = [{'position': int(p), 'residue': r, 'probability': round(float(pr), 6), 'rank': int(n),
-                          'called': bool(c), 'atlas': None if classes is None else classes.get(int(p), 'none')}
+                          'called': bool(c), 'atlas': None if classes is None else classes.get(int(p), 'none'),
+                          'atlas_aligned': int(p) in aligned}
                          for p, r, pr, n, c in zip(g['position'], g['residue'], g['probability'], rank, g['called'])]
         protein = {'id': record['id'], 'source': 'sequence', 'length': len(record['sequence']),
                    'st_count': len(site_list), 'structure': None, 'sites': site_list}

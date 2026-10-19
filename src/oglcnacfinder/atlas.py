@@ -39,9 +39,11 @@ def position_map(a, b):
 
 def transfer_sites(sequence, entries):
     """Atlas class of each position of `sequence` ('positive' or 'ambiguous'; absent = not reported),
-    and one summary per Atlas entry. Each entry: {'protein_id', 'organism', 'sequence', 'positive':
-    [positions], 'ambiguous': [positions]} with 1-based positions in the entry's own sequence."""
-    positive, ambiguous, matches = set(), set(), []
+    the positions whose class comes only from aligned (non-identical) entries, and one summary per
+    Atlas entry. Each entry: {'protein_id', 'organism', 'sequence', 'positive': [positions],
+    'ambiguous': [positions]} with 1-based positions in the entry's own sequence."""
+    found = {(key, how): set() for key in ('positive', 'ambiguous') for how in ('identical', 'aligned')}
+    matches = []
     for e in entries:
         summary = {'protein_id': e['protein_id'], 'organism': e.get('organism'), 'identical': e['sequence'] == sequence}
         if summary['identical']:
@@ -51,13 +53,17 @@ def transfer_sites(sequence, entries):
             continue
         else:
             mapping = position_map(e['sequence'], sequence)
-        for target, key in [(positive, 'positive'), (ambiguous, 'ambiguous')]:
+        how = 'identical' if mapping is None else 'aligned'
+        for key in ('positive', 'ambiguous'):
             kept = [int(x) if mapping is None else mapping.get(int(x)) for x in e[key]]
             kept = [x for x in kept if x is not None]
-            target.update(kept)
+            found[key, how].update(kept)
             summary[f'{key}_transferred'] = len(kept)
             summary[f'{key}_reported'] = len(e[key])
         matches.append(summary)
-    classes = {p: 'ambiguous' for p in ambiguous - positive}
+    positive = found['positive', 'identical'] | found['positive', 'aligned']
+    ambiguous = (found['ambiguous', 'identical'] | found['ambiguous', 'aligned']) - positive
+    classes = {p: 'ambiguous' for p in ambiguous}
     classes.update({p: 'positive' for p in positive})
-    return classes, matches
+    aligned = (positive - found['positive', 'identical']) | (ambiguous - found['ambiguous', 'identical'])
+    return classes, aligned, matches

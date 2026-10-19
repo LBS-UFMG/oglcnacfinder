@@ -48,5 +48,6 @@ def test_atlas_classes():
     assert {s['position']: s['atlas'] for s in proteins[0]['sites']} == {2: 'positive', 3: 'ambiguous', 5: 'ambiguous',
                                                                          6: 'none', 9: 'none'}
     assert proteins[0]['atlas_matches'][0]['protein_id'] == 'P1'
+    assert not any(s['atlas_aligned'] for s in proteins[0]['sites'])
     assert {s['atlas'] for s in proteins[1]['sites']} == {'none'} and proteins[1]['atlas_matches'] == []
     assert {s['atlas'] for s in proteins[2]['sites']} == {None} and 'atlas_matches' not in proteins[2]
