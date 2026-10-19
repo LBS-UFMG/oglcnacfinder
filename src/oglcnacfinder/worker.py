@@ -11,6 +11,7 @@ worker reads it from the environment variable OGLCNACFINDER_TOKEN.
 import argparse
 import json
 import logging
+import logging.handlers
 import os
 import sys
 import time
@@ -146,13 +147,17 @@ def main(argv=None):
                         help=f'maximum padded tokens per ESM-2 batch (default: {MAX_TOKENS})')
     parser.add_argument('--esm', default=ESM_PATH, help=f'ESM-2 model (default: {ESM_PATH})')
     parser.add_argument('--once', action='store_true', help='score at most one job, then exit (for testing)')
+    parser.add_argument('--log-file', help='write the log to this file, rotated at 5 MB with 3 older files kept '
+                                           '(default: standard error)')
     parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     args = parser.parse_args(argv)
 
     token = os.environ.get(TOKEN_VARIABLE, '')
     if not token:
         parser.error(f'set the environment variable {TOKEN_VARIABLE} to the website\'s worker.token')
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s', stream=sys.stderr)
+    handler = (logging.handlers.RotatingFileHandler(args.log_file, maxBytes=5_000_000, backupCount=3, encoding='utf-8')
+               if args.log_file else logging.StreamHandler(sys.stderr))
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s', handlers=[handler])
     predictor = Predictor(args.model, device=args.device, esm_path=args.esm, max_tokens=args.max_tokens,
                           progress=False)
     log.info('O-GlcNAcFinder worker %s: device %s, website %s, every %g s', __version__, predictor.device,

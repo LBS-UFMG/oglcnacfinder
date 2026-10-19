@@ -135,12 +135,32 @@ def score_proteins(ids, seqs, embed, classify, platt_a, platt_b, cutoff, progres
     return sites[COLUMNS]
 
 
+def _quiet_hugging_face():
+    """Silences the loading messages of transformers and huggingface_hub (load report, warnings,
+    progress bars), for unattended runs such as the website worker; errors are still shown."""
+    try:
+        from transformers.utils import logging as transformers_logging
+        transformers_logging.set_verbosity_error()
+        transformers_logging.disable_progress_bar()
+    except (ImportError, AttributeError):
+        pass
+    try:
+        from huggingface_hub.utils import disable_progress_bars, logging as hub_logging
+        hub_logging.set_verbosity_error()
+        disable_progress_bars()
+    except (ImportError, AttributeError):
+        pass
+
+
 class Predictor:
     """The O-GlcNAcFinder model: ESM-2 150M plus the classifier, Platt parameters and cut-off of
     final_model.pt."""
 
     def __init__(self, model_path, device=None, esm_path=ESM_PATH, max_tokens=MAX_TOKENS, progress=True):
         from transformers import AutoTokenizer, EsmModel
+
+        if not progress:
+            _quiet_hugging_face()
 
         # Full float32 matrix products, as in the paper
         torch.backends.cuda.matmul.allow_tf32 = False
