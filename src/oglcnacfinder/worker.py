@@ -157,7 +157,9 @@ def main(argv=None):
         parser.error(f'set the environment variable {TOKEN_VARIABLE} to the website\'s worker.token')
     handler = (logging.handlers.RotatingFileHandler(args.log_file, maxBytes=5_000_000, backupCount=3, encoding='utf-8')
                if args.log_file else logging.StreamHandler(sys.stderr))
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s', handlers=[handler])
+    # the worker's own messages from INFO; other libraries (e.g. httpx request lines) only from WARNING
+    logging.basicConfig(level=logging.WARNING, format='%(asctime)s %(levelname)s %(message)s', handlers=[handler])
+    log.setLevel(logging.INFO)
     predictor = Predictor(args.model, device=args.device, esm_path=args.esm, max_tokens=args.max_tokens,
                           progress=False)
     log.info('O-GlcNAcFinder worker %s: device %s, website %s, every %g s', __version__, predictor.device,
