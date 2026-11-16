@@ -4,7 +4,10 @@ Prediction of O-GlcNAc sites on serine and threonine residues from protein langu
 embeddings (ESM-2 150M), with calibrated probabilities. Laboratory of Bioinformatics and Systems
 (LBS), UFMG.
 
-Status: **development version 0.26.1017** (LBS-SRC versioning: 0.YY.MMDD before publication).
+Version **0.26.1116**: the finished version of O-GlcNAcFinder, the one described in the article submitted for
+publication. It is complete and is not a beta. The leading 0 only means that the article has not been
+published yet: following the LBS-SRC versioning policy, the same tool becomes version 1.YY.MMDD when
+the article is published.
 
 ## Installation
 

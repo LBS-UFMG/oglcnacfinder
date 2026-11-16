@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "oglcnacfinder"
-version = "0.26.1017"
+version = "0.26.1116"
 description = "Prediction of O-GlcNAc sites on serine and threonine residues from ESM-2 embeddings"
 readme = "README.md"
 license = {text = "MIT"}
