@@ -10,6 +10,8 @@ code of notebook 02 unchanged):
   - the trained classifier, Platt scaling (in float64) and the validation cut-off, all read from
     final_model.pt.
 """
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import torch
@@ -18,6 +20,8 @@ from tqdm.auto import tqdm
 
 MAX_RES, OVERLAP, K = 1022, 256, 20
 ESM_PATH, MAX_TOKENS = 'facebook/esm2_t30_150M_UR50D', 65536
+# The trained model shipped with the package (classifier, Platt parameters and cut-off)
+DEFAULT_MODEL = Path(__file__).with_name('final_model.pt')
 COLUMNS = ['protein_id', 'position', 'residue', 'logit', 'probability', 'called']
 
 # Letters that are single residue tokens of the ESM-2 vocabulary: the 20 standard amino acids, X
@@ -154,9 +158,9 @@ def _quiet_hugging_face():
 
 class Predictor:
     """The O-GlcNAcFinder model: ESM-2 150M plus the classifier, Platt parameters and cut-off of
-    final_model.pt."""
+    final_model.pt (by default, the file shipped with the package)."""
 
-    def __init__(self, model_path, device=None, esm_path=ESM_PATH, max_tokens=MAX_TOKENS, progress=True):
+    def __init__(self, model_path=None, device=None, esm_path=ESM_PATH, max_tokens=MAX_TOKENS, progress=True):
         from transformers import AutoTokenizer, EsmModel
 
         if not progress:
@@ -168,7 +172,7 @@ class Predictor:
         self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')
         self.max_tokens, self.progress = max_tokens, progress
 
-        final = torch.load(model_path, map_location='cpu', weights_only=True)
+        final = torch.load(model_path or DEFAULT_MODEL, map_location='cpu', weights_only=True)
         if final['plm'] != 'ESM2-150M' or final['window'] != 'pm20':
             raise ValueError(f'unexpected model file: plm={final["plm"]}, window={final["window"]}')
         self.clf = nn.Sequential(nn.Linear(len(final['mean']), final['config']['hidden']), nn.ReLU(),

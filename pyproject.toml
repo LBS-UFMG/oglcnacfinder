@@ -22,3 +22,6 @@ oglcnacfinder-worker = "oglcnacfinder.worker:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+oglcnacfinder = ["final_model.pt"]

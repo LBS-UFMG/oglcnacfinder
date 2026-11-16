@@ -12,14 +12,14 @@ Status: **development version 0.26.1017** (LBS-SRC versioning: 0.YY.MMDD before 
 pip install .
 ```
 
-The model weights (`final_model.pt`: classifier, Platt parameters and cut-off) are distributed
-separately. ESM-2 150M (`facebook/esm2_t30_150M_UR50D`) is downloaded from Hugging Face on first use.
+The trained model (`final_model.pt`: classifier, Platt parameters and cut-off, 1.3 MB) is shipped
+with the package and used by default. ESM-2 150M (`facebook/esm2_t30_150M_UR50D`) is downloaded from Hugging Face on first use.
 A GPU is recommended for more than a few proteins.
 
 ## Usage
 
 ```bash
-oglcnacfinder proteins.fasta -m final_model.pt -o predictions.tsv
+oglcnacfinder proteins.fasta -o predictions.tsv
 ```
 
 One row per serine (S) and threonine (T):
@@ -38,7 +38,7 @@ From Python:
 ```python
 from oglcnacfinder import Predictor, read_fasta
 
-predictor = Predictor('final_model.pt')
+predictor = Predictor()  # the shipped model; Predictor('other_model.pt') loads another file
 records = read_fasta('proteins.fasta')
 sites = predictor.score([r[0] for r in records], [r[1] for r in records])
 ```
@@ -51,7 +51,7 @@ requests. It authenticates with a shared token: the same value goes in the websi
 (`worker.token = '...'`) and in the environment variable `OGLCNACFINDER_TOKEN` of the worker.
 
 ```bash
-oglcnacfinder-worker https://bioinfo.dcc.ufmg.br/oglcnacfinder -m final_model.pt --device cuda:0
+oglcnacfinder-worker https://bioinfo.dcc.ufmg.br/oglcnacfinder --device cuda:0
 ```
 
 `--once` scores at most one job and exits (for testing).

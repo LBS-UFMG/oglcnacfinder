@@ -14,7 +14,8 @@ def main(argv=None):
         prog='oglcnacfinder',
         description='Predict O-GlcNAc sites on every serine and threonine of the proteins of a FASTA file.')
     parser.add_argument('fasta', help='input FASTA file')
-    parser.add_argument('-m', '--model', required=True, help='final_model.pt (classifier, Platt parameters, cut-off)')
+    parser.add_argument('-m', '--model', help='final_model.pt (classifier, Platt parameters, cut-off); '
+                                               'default: the model shipped with the package')
     parser.add_argument('-o', '--output', help='output table (.csv: comma-separated; otherwise tab-separated); '
                                                'default: standard output')
     parser.add_argument('--device', help='torch device (default: cuda if available, else cpu)')

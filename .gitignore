@@ -3,5 +3,6 @@ __pycache__/
 build/
 dist/
 .pytest_cache/
-# Model weights are distributed separately (Zenodo at release)
+# Model weights: only the trained model shipped with the package is tracked
 *.pt
+!src/oglcnacfinder/final_model.pt

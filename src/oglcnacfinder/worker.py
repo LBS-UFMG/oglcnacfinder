@@ -140,7 +140,8 @@ def main(argv=None):
         description=f'Score the jobs of the O-GlcNAcFinder website. The worker token is read from the '
                     f'environment variable {TOKEN_VARIABLE}.')
     parser.add_argument('url', help='website address, e.g. https://bioinfo.dcc.ufmg.br/oglcnacfinder')
-    parser.add_argument('-m', '--model', required=True, help='final_model.pt (classifier, Platt parameters, cut-off)')
+    parser.add_argument('-m', '--model', help='final_model.pt (classifier, Platt parameters, cut-off); '
+                                               'default: the model shipped with the package')
     parser.add_argument('--interval', type=float, default=20, help='seconds between requests when idle (default: 20)')
     parser.add_argument('--device', help='torch device, e.g. cuda:0 (default: cuda if available, else cpu)')
     parser.add_argument('--max-tokens', type=int, default=MAX_TOKENS,
