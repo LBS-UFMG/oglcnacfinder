@@ -10,7 +10,7 @@ readme = "README.md"
 license = {text = "MIT"}
 authors = [{name = "Adenilson Arcanjo"}]
 requires-python = ">=3.9"
-dependencies = ["numpy", "pandas", "torch>=1.13", "transformers", "tqdm"]
+dependencies = ["numpy", "pandas", "torch>=2.0.1", "transformers", "tqdm"]
 
 [project.optional-dependencies]
 test = ["pytest", "biopython"]
