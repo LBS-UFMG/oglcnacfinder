@@ -1,0 +1,43 @@
+{
+  "title": "O-GlcNAcFinder: prediction of O-GlcNAc sites from protein language model embeddings",
+  "upload_type": "software",
+  "description": "O-GlcNAcFinder predicts O-GlcNAc sites on serines and threonines from ESM-2 (150M) embeddings, with calibrated probabilities. Python package, command-line tool, trained model and the worker of the web server (https://bioinfo.dcc.ufmg.br/oglcnacfinder/).",
+  "creators": [
+    {
+      "name": "Arcanjo, Adenilson",
+      "affiliation": "Instituto Federal de Educação, Ciência e Tecnologia do Ceará (IFCE); Universidade Federal de Minas Gerais (UFMG)",
+      "orcid": "0000-0002-9674-1342"
+    },
+    {
+      "name": "da Silva, Leonardo Henrique",
+      "affiliation": "Universidade Federal de Minas Gerais (UFMG)",
+      "orcid": "0000-0003-2341-5906"
+    },
+    {
+      "name": "de Sousa, Fernanda Coura Pena",
+      "affiliation": "Universidade Federal de Minas Gerais (UFMG)",
+      "orcid": "0009-0001-1374-9382"
+    },
+    {
+      "name": "de Melo-Minardi, Raquel C.",
+      "affiliation": "Universidade Federal de Minas Gerais (UFMG)",
+      "orcid": "0000-0001-5190-100X"
+    }
+  ],
+  "license": "MIT",
+  "keywords": [
+    "O-GlcNAc",
+    "O-GlcNAcylation",
+    "post-translational modification",
+    "protein language model",
+    "ESM-2",
+    "site prediction"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/LBS-UFMG/oglcnacfinder-article",
+      "relation": "isSupplementedBy",
+      "resource_type": "software"
+    }
+  ]
+}
